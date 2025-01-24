@@ -71,3 +71,49 @@ def pregunta_01():
 
 
     """
+    import os
+    import zipfile
+    import pandas as pd
+
+    # Paths
+    input_zip_path = 'files/input.zip' 
+    output_dir = 'files/output/'  
+    input_extracted_path = 'files/input/' 
+
+    
+    os.makedirs(output_dir, exist_ok=True)
+
+    
+    if os.path.exists(input_extracted_path):
+       
+        import shutil
+        shutil.rmtree(input_extracted_path)
+    os.makedirs(input_extracted_path, exist_ok=True)
+
+    with zipfile.ZipFile(input_zip_path, 'r') as zip_ref:
+        zip_ref.extractall(input_extracted_path)
+
+   
+    datasets = ['train', 'test']  
+    columns = ['phrase', 'target']  
+
+    generated_files = []
+
+    for dataset in datasets:
+        data_dir = os.path.join(input_extracted_path, 'input', dataset)
+        rows = []
+
+        for sentiment in ['positive', 'negative', 'neutral']:
+            sentiment_dir = os.path.join(data_dir, sentiment)
+            for file_name in os.listdir(sentiment_dir):
+                file_path = os.path.join(sentiment_dir, file_name)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    phrase = file.read().strip()
+                    rows.append({'phrase': phrase, 'target': sentiment})
+
+        df = pd.DataFrame(rows, columns=columns)
+        output_file_path = os.path.join(output_dir, f"{dataset}_dataset.csv")
+        df.to_csv(output_file_path, index=False)
+        generated_files.append(output_file_path)
+
+    return generated_files
